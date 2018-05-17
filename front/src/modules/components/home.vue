@@ -1,24 +1,12 @@
 <template>
-  <div class="home">
-    <div class="calendar">
-    <h1>{{ msg }}</h1>
-   <!--  <h2>Essential Links</h2>
-    <ul>
-      <li>
-        <a
-          href="https://vuejs.org"
-          target="_blank"
-        >
-          Core Docs
-        </a>
-      </li>
-    </ul> -->
-    <calendar></calendar>
-    </div>
-    <div class="authentication">
-      <authentication></authentication>
-    </div>
-  </div>
+  <v-container fluid class="home">
+    <v-container class="calendar">
+    <calendar v-bind:visibleProp="visible" v-on:displayAuth="showAuth($event)"></calendar>
+    </v-container>
+    <v-container class="authentication">
+      <authentication v-if="visible" ></authentication>
+    </v-container>
+  </v-container>
 </template>
 
 <script>
@@ -34,10 +22,17 @@ export default {
   },
   data () {
     return {
-      msg: 'Welcome to my booking App!',
-
+     visible:false
+    }
+  },
+  methods:{
+   showAuth(updateVisible){
+    this.visible = updateVisible;
+    console.log('this.visible in home: ', this.visible);
+    // TODO : il faudra renvoyer un update à calender pour que la propriété visible de mette à nouveau à false, de manière à ce que si la personne reclique sur une heure de RDV, le formulaire ne s'enlève pas
     }
   }
+  
 };
 </script>
 
@@ -47,37 +42,19 @@ export default {
 
 .home{
   width: 100%;
-  /*overflow:auto;*/
   display: flex;
 }
 
 .calendar{
   float:left; 
   width: 50%;
- /* background:grey;*/
   height: 400px;
 }
 
 .authentication{
   float: right;
   width: 50%;
-  /*background:pink;*/
   height: 400px;
 }
 
-
-/*h1, h2 {
-  font-weight: normal;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}*/
 </style>

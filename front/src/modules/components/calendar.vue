@@ -8,7 +8,7 @@
 
 				<table class="calendar">
 					<thead class="calendar__head">
-						<v-btn icon v-on:click="getPreviousDays()">
+						<v-btn icon class="calendar__navicon"v-on:click="getPreviousDays()">
 							<v-icon>navigate_before</v-icon>
 						</v-btn>
 						<!-- affichage de la date -->
@@ -18,7 +18,7 @@
 								<li class="calendar__headDayLi">{{day | dateFormatDayNumberAndMonth}}</li>
 							</ul>
 						</tr>
-						<v-btn icon v-on:click="getNextDays()">
+						<v-btn icon class="calendar__navicon" v-on:click="getNextDays()">
 							<v-icon>navigate_next</v-icon>
 						</v-btn>
 					</thead>
@@ -26,7 +26,7 @@
 						<!-- affichage des boutons heures -->
 						<tr class="calendar__bodyDay" v-for="(day,index) in dayRangeToDisplay" :key="index">
 							<ul class="calendar__bodyUl"v-for="(hour, index) in hours" :key="index">
-								<li class="calendar__bodyLi"><v-btn v-on:click="bookApt(hour,day)">{{hour}}</v-btn></li>
+								<li class="calendar__bodyLi"><v-btn v-on:click="selectTime(hour,day)">{{hour}}</v-btn></li>
 							</ul>
 						</tr>
 					</tbody>
@@ -39,18 +39,23 @@
 
 <script>
 
+import { store } from './../../store/store';
+import cal from './../../helpers/calendar';
 import moment from 'moment';
 import 'moment/locale/fr';
 import twix from 'twix';
 
 export default {
 	name: 'calendar',
+	props:['visibleProp'],
 	data () {
 		return {
 			hours:['10:00','11:00', '12:00', '13:00'],
 			hour:'',
 			day:'',
-			beginDisplay:0
+			beginDisplay:0,
+			aptMoment:'',
+			displayAuth:this.visibleProp
 		}
 	},
 	computed:{
@@ -79,14 +84,25 @@ export default {
 		},
 		getNextDays(){
 			if (this.beginDisplay>=0){ this.beginDisplay += 3}
-			
 		},
 		getPreviousDays(){
 			if (this.beginDisplay>=3){this.beginDisplay -= 3}
 		},
-		bookApt(hour,day){
-			console.log('je veux réserver à :', hour);
-			console.log('le: ', day);
+		selectTime(hour,day){
+			let aptTime ={};
+			aptTime.day = day;
+			aptTime.hour = hour;
+			this.aptMoment = moment(aptTime.day).startOf('day').add(cal.convertTimeInMinutes(aptTime.hour), 'minutes');
+			//pass to store the details of the appointment
+			console.log('aptMoment:', this.aptMoment);
+			this.$store.commit('getAptTime', this.aptMoment);
+			//pass to parent component Home the event to change display Auth to visible
+			this.updateDisplayAuth()
+		},
+		updateDisplayAuth(){
+			this.displayAuth = !this.displayAuth;
+			console.log('this.displayAuth: ', this.displayAuth);
+			this.$emit('displayAuth', this.displayAuth);
 		}
 	},
 	filters:{
@@ -95,6 +111,9 @@ export default {
 		},
 		dateFormatDayNumberAndMonth: function(date) {
 			return moment(date).format('D MMM');
+		},
+		dateFormatFullDayHour: function(date){
+			return moment(date).format('LLLL');
 		}
 	}
 };
@@ -104,7 +123,8 @@ export default {
 
 <style scoped>
 
-	.hr{
+
+	.calendar__navicon {
 		color:#212121;
 	}
 
@@ -115,7 +135,7 @@ export default {
 	.card__title{
 		padding: 0;
 		margin: auto;
-		font-weight: bold;
+		/*font-weight: bold;*/
 	}
 
 	.calendar{
@@ -129,7 +149,7 @@ export default {
 		width: 70%;
 		margin-top: 0;
 		justify-content: center;
-		border-bottom: 1px solid #673AB7;
+		border-bottom: 2px solid #673AB7;
 		margin: auto;
 	}
 

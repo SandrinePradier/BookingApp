@@ -4,7 +4,7 @@ import axios from 'axios';
 //dans lequel on peut configurer des options
 
 let http = axios.create({
-	// baseURL: 'http://localhost:2708',
+	baseURL: 'http://localhost:2707',
 	// headers: {
  //    'token': sessionStorage.getItem('token')
  //  }
