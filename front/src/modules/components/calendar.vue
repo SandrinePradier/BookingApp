@@ -1,39 +1,38 @@
 <template>
-	<div>
+	<v-content>
 		<v-card>
 			<v-toolbar card class="card__head">
 				<v-toolbar-title class="card__title">Sélectionnez votre RDV</v-toolbar-title>
 			</v-toolbar card>
-			<v-card-text>
-
-				<table class="calendar">
-					<thead class="calendar__head">
-						<v-btn icon class="calendar__navicon"v-on:click="getPreviousDays()">
+			<v-card-text class="card__body">
+				<table class="card__body__calendar">
+					<thead class="card__body__calendar__head">
+						<v-btn icon class="card__body__calendar__navicon"v-on:click="getPreviousDays()">
 							<v-icon>navigate_before</v-icon>
 						</v-btn>
 						<!-- affichage de la date -->
-						<tr class="calendar__headDays" v-for="(day,index) in dayRangeToDisplay">
-							<ul class="calendar__headDayUl">
-								<li class="calendar__headDayLi">{{day | dateFormatDayName}}</li>
-								<li class="calendar__headDayLi">{{day | dateFormatDayNumberAndMonth}}</li>
+						<tr class="card__body__calendar__headDays" v-for="(day,index) in dayRangeToDisplay">
+							<ul class="card__body__calendar__headDayUl">
+								<li class="card__body__calendar__headDayLi">{{day | dateFormatDayName}}</li>
+								<li class="card__body__calendar__headDayLi">{{day | dateFormatDayNumberAndMonth}}</li>
 							</ul>
 						</tr>
-						<v-btn icon class="calendar__navicon" v-on:click="getNextDays()">
+						<v-btn icon class="card__body__calendar__navicon" v-on:click="getNextDays()">
 							<v-icon>navigate_next</v-icon>
 						</v-btn>
 					</thead>
-					<tbody class="calendar__body">
+					<tbody class="card__body__calendar__body">
 						<!-- affichage des boutons heures -->
-						<tr class="calendar__bodyDay" v-for="(day,index) in dayRangeToDisplay" :key="index">
-							<ul class="calendar__bodyUl"v-for="(hour, index) in hours" :key="index">
-								<li class="calendar__bodyLi"><v-btn v-on:click="selectTime(hour,day)">{{hour}}</v-btn></li>
+						<tr class="card__body__calendar__bodyDay" v-for="(day,index) in dayRangeToDisplay" :key="index">
+							<ul class="card__body__calendar__bodyUl"v-for="(hour, index) in hours" :key="index">
+								<li class="card__body__calendar__bodyLi"><v-btn v-bind:disabled="DisableButton(getSlotsFromStore, hour, day)" v-on:click="selectTime(hour,day)" :key="index">{{hour}}</v-btn></li>
 							</ul>
 						</tr>
 					</tbody>
 				</table>
 			</v-card-text>
 		</v-card>
-	</div>
+	</v-content>
 </template>
 
 
@@ -55,7 +54,7 @@ export default {
 			day:'',
 			beginDisplay:0,
 			aptMoment:'',
-			displayAuth:this.visibleProp
+			displayAuth:this.visibleProp,
 		}
 	},
 	computed:{
@@ -63,7 +62,7 @@ export default {
 			return moment();
 		},
 		getDaysRange(){
-			let start= this.getCurrentDay;
+			let start= moment(this.getCurrentDay).add(1, 'days');
 			let end = this.getCurrentDayPlus2month(moment(start));
 			return this.getDaysOfTheTimeRange(start, end);
 		},
@@ -72,11 +71,14 @@ export default {
 		},
 		dayRangeToDisplay(){
 			return this.getDaysRange.slice(this.beginDisplay,this.endDisplay);
-		}
+		},
+		getSlotsFromStore(){
+      		return this.$store.state.slots;
+    	}
 	},
 	methods:{
 		getCurrentDayPlus2month(now){
-			return moment(now).add(1,'month');
+			return moment(now).add(2,'month');
 		},
 		getDaysOfTheTimeRange(start,end){
 			let arr = moment(start).twix(end).toArray('days');
@@ -89,6 +91,7 @@ export default {
 			if (this.beginDisplay>=3){this.beginDisplay -= 3}
 		},
 		selectTime(hour,day){
+			this.displayAuth = false;
 			let aptTime ={};
 			aptTime.day = day;
 			aptTime.hour = hour;
@@ -103,6 +106,19 @@ export default {
 			this.displayAuth = !this.displayAuth;
 			console.log('this.displayAuth: ', this.displayAuth);
 			this.$emit('displayAuth', this.displayAuth);
+		},
+		DisableButton(slots, hour, day){
+			//this function is called in the v-for, and evaluate for each day and each hour if there is a slot matching. slot matching means there is an appointment at that time. if so the button will be disabled because this function return true
+			console.log('setClass is called');
+			for (let i=0; i<slots.length; i++){
+				console.log('slot[i]:', slots[i]);
+				console.log('slot[i].start: ', slots[i].start);
+				if (moment(slots[i].start).format('YYYY-MM-DD') == moment(day).format('YYYY-MM-DD') && moment(slots[i].start).format('HH:mm') == hour){
+						console.log('day matching: ', day);
+						console.log('hour matching: ', hour);
+						return true;
+					} 
+			}
 		}
 	},
 	filters:{
@@ -122,67 +138,5 @@ export default {
 
 
 <style scoped>
-
-
-	.calendar__navicon {
-		color:#212121;
-	}
-
-	.card__head{
-		padding: 0;
-	}
-
-	.card__title{
-		padding: 0;
-		margin: auto;
-		/*font-weight: bold;*/
-	}
-
-	.calendar{
-		width:100%;
-		margin-top: 0;
-	}
-
-	.calendar__head{
-		display: flex;
-		flex-direction:row;
-		width: 70%;
-		margin-top: 0;
-		justify-content: center;
-		border-bottom: 2px solid #673AB7;
-		margin: auto;
-	}
-
-	.calendar__headDays{
-		font-size: 14px;
-		margin-bottom: 5px;
-		margin-top:5px;
-	}
-
-	.calendar__headDayUl{
-		width: 100px;
-	}
-
-	.calendar__headDayLi{
-		padding: 0px;
-		margin: 0px;
-		list-style:none;
-		width: 100%;
-	}
-
-	.calendar__body{
-		display: flex;
-		flex-direction:row;
-		width: 70%;
-		padding-top: 10px;
-		justify-content: center;
-		margin: auto;
-	}
-
-	.calendar__bodyLi{
-		list-style:none;
-		width: 100px;
-	}
-
 
 </style>

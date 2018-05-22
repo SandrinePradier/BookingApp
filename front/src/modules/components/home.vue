@@ -9,9 +9,13 @@
   </v-container>
 </template>
 
+
 <script>
-import calendar from '@/modules/components/calendar'
-import authentication from '@/modules/components/authentication'
+
+import { store } from './../../store/store';
+import http from './../../helpers/http';
+import calendar from '@/modules/components/calendar';
+import authentication from '@/modules/components/authentication';
 
 
 export default {
@@ -29,8 +33,18 @@ export default {
    showAuth(updateVisible){
     this.visible = updateVisible;
     console.log('this.visible in home: ', this.visible);
-    // TODO : il faudra renvoyer un update à calender pour que la propriété visible de mette à nouveau à false, de manière à ce que si la personne reclique sur une heure de RDV, le formulaire ne s'enlève pas
+    // TODO : il faudra renvoyer un update à calender pour que la propriété visible se mette à nouveau à false, de manière à ce que si la personne reclique sur une heure de RDV, le formulaire ne s'enlève pas
     }
+  },
+  created(){
+    http.get('/')
+    .then( 
+      res => {
+        console.log('res from get:', res);
+        this.$store.commit('getSlots',res.data.content);
+      })
+    .catch( 
+      err => {console.log('err:', err)})
   }
   
 };
@@ -40,7 +54,7 @@ export default {
 
 <style scoped>
 
-.home{
+/*.home{
   width: 100%;
   display: flex;
 }
@@ -55,6 +69,6 @@ export default {
   float: right;
   width: 50%;
   height: 400px;
-}
+}*/
 
 </style>

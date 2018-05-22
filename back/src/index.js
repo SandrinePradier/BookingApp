@@ -2,7 +2,9 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
-import Appointment from './model.js'
+import Appointment from './modelapt.js';
+import Slot from './modelslot.js';
+import moment from 'moment';
 
 
 let app = express();
@@ -21,34 +23,70 @@ app.use(function (req, res, next) {
  next();
 });
 
+
+//this route is called from home and will send back the slots.
+app.get('/', (req, res) => {
+	console.log('get route is OK');
+	Slot.find({}, (err, result) => {
+		if (err) {console.log('error in Slot.find')}
+		if (!result){
+			res.status(200).json({success:true, message:'any time available for now'})
+		}
+		else {
+			res.status(200).json({success:true, message:'Here are the slots', content:result})
+		}
+	})
+})
+
+
+//this route is called from authentication after appointment time is selected,
+// it will check if no appointment at this time, then store apt i DB
+// record a slot for the time.
+// and return confirmation
 app.post('/', (req, res) => {
 	//check that the body exists
 		if (req.body){
 			let apt = req.body;
 			console.log ('apt : ', apt);
 			//check if all the requested field of the models are received
-			if (apt.name && apt.mail && apt.time){
+			if (apt.name && apt.mail && apt.time && apt.duration){
 				//get back the datas in a variable
 				let newApt = new Appointment;
 				newApt.lastname = apt.name;
 				newApt.email = apt.mail;
 				newApt.time = apt.time;
+				newApt.duration = apt.duration;
+
+				let newSlot = new Slot;
+				newSlot.start = moment(apt.time);
+				newSlot.duration = apt.duration;
+				newSlot.end = moment(newSlot.start).add(apt.duration, 'minutes');
+				newSlot.status = 'booked';
+				console.log('newSlot:', newSlot);
+
 				//check if no appointment already at that time
-				Appointment.findOne({'time': apt.time}, function(err, result){
-					if (err) {}
+				Appointment.findOne({'time': apt.time}, (err, result) => {
+					if (err) { console.log('error in Appointment.findOne')}
 					if (result){
 						// if matching found, means already an appontment at that time
 						//sending back a 403 error ( server has understood the request, but reject the execution)
-						res.status(403).json({success:false, message:'the appointment cannot be confirmed as the date is not available'})
+						res.status(403).json({success:false, message:'Le RDV ne peut être confirmé car cet horaire n\'est pas disponible'})
 					}
 					else{
 						//if no matching, means the apt can be save in DB
 						newApt.save(function(err){
 							if(err){
-								res.status(403).json({success:false, message:'the appointment Could not be saved in DB'})
+								res.status(403).json({success:false, message:'Votre RDV n\'a pas été pris en compte dans notre agenda. Merci de réessayer'})
 							}
 							else{
-								res.status(200).json({success:true, message:'the appointment has been confirmed'})
+								newSlot.save(function(err){
+									if (err){
+										res.status(403).json({success:false, message:'Votre RDV n\'a pas été pris en compte dans notre agenda. Merci de réessayer'})
+									}
+									else{
+										res.status(200).json({success:true, message:'Votre RDV a bien été confirmé'})
+									}
+								})
 							}	
 						})
 					}
@@ -56,12 +94,12 @@ app.post('/', (req, res) => {
 			}
 			else{
 				//j'ai bien un body, mais il manque un des champs, renvoie un 403: il manque des infos pour confirmer le RDV
-				res.status(403).json({success:false, message:'please make sure you provide lastname, email and time to book appointment'})
+				res.status(403).json({success:false, message:'Vous devez renseigner un nom et un email'})
 			}
 		}
 		//si je n'ai pas de body
 		else{
-			res.status(500).json({success:false, message:'the appointment has NOT been confirmed'})
+			res.status(500).json({success:false, message:'Votre RDV n\'a pas pu être confirmé'})
 		}
 })
 

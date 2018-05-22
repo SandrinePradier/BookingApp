@@ -14,10 +14,15 @@ let appointmentSchema = new Schema({
 	time:  {
 		type : Date,
 		required: true
+	},
+	duration: {
+		type : Number,
+		required: true
 	}
 })
 
 
 let Appointment = mongoose.model('appointment', appointmentSchema);
+
 
 export default Appointment;

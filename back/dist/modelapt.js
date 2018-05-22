@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.Slot = exports.Appointment = undefined;
 
 var _mongoose = require('mongoose');
 
@@ -34,26 +33,4 @@ var appointmentSchema = new Schema({
 
 var Appointment = _mongoose2.default.model('appointment', appointmentSchema);
 
-var slotSchema = new Schema({
-	start: {
-		type: String,
-		required: true
-	},
-	end: {
-		type: String,
-		required: true
-	},
-	duration: {
-		type: Number,
-		required: true
-	},
-	status: {
-		type: String,
-		required: true
-	}
-});
-
-var Slot = _mongoose2.default.model('slot', slotSchema);
-
-exports.Appointment = Appointment;
-exports.Slot = Slot;
+exports.default = Appointment;

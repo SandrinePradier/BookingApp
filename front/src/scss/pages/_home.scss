@@ -1,0 +1,16 @@
+.home{
+  width: 100%;
+  display: flex;
+}
+
+.calendar{
+  float:left; 
+  width: 50%;
+  height: 400px;
+}
+
+.authentication{
+  float: right;
+  width: 50%;
+  height: 400px;
+}

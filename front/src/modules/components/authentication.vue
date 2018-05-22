@@ -34,12 +34,16 @@ export default {
   computed:{
   	getTimeApt(){
   		return this.$store.state.aptTime;
-  	}
+  	},
+    getDurationApt(){
+      return this.$store.state.aptDuration;
+    }
   },
   data () {
     return {
       name:'',
       email:'',
+      swalMessage:''
     }
   },
   methods:{
@@ -47,21 +51,30 @@ export default {
   		let aptDetails = {
   			name:name,
   			mail:email,
-  			time:this.getTimeApt
+  			time:this.getTimeApt,
+        duration: this.getDurationApt
   		};
   		this.$store.commit('getAptContact',aptDetails );
-  		console.log('Je vais confirmer le RDV:',aptDetails);
-  		// ici on fera un call http
       http.post('/', aptDetails)
       .then(
         res => {
           console.log('res from POST aptDetails: ', res);
-          this.$swal('votre RDV a été confirmé!')
+          this.swalMessage = res.data.message;
+          this.$swal({
+            type:'success',
+            title:'votre RDV',
+            text:this.swalMessage
+          })
         })
       .catch(
         error => {
           console.log(error.response);
-          this.$swal('votre RDV n\'a pas pu être confirmé')
+          this.swalMessage = error.response;
+          this.$swal({
+            type:'error',
+            title:'votre RDV',
+            text:this.swalMessage.data.message
+          })
         });
   	}
   },
@@ -77,8 +90,4 @@ export default {
 
 <style>
 
-.card__timeApt{
-	font-weight: bold;
-	font-size: 16px;
-}
 </style>
